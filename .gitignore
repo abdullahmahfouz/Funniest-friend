@@ -1,0 +1,14 @@
+# Private message data. Never commit any of this.
+stats.json
+chat.db
+chat.db-wal
+chat.db-shm
+*.db
+*.db-wal
+*.db-shm
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
