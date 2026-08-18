@@ -1,0 +1,26 @@
+# This file controls what `vercel deploy` uploads from this laptop. It's
+# almost identical to .gitignore, EXCEPT it does NOT ignore stats.json --
+# that's the one file we want the live site to have that git never sees
+# (see the comment in .gitignore for why).
+#
+# Everything below this line must never be uploaded to Vercel, same as git:
+chat.db
+chat.db-wal
+chat.db-shm
+*.db
+*.db-wal
+*.db-shm
+
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+node_modules/
+.next/
+.vercel/
+
+.env.local
+.env*.local
+
+legacy-flask-backend/

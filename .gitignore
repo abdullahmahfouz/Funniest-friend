@@ -1,4 +1,8 @@
 # Private message data. Never commit any of this.
+# stats.json holds real names and AI-written notes about real friends, and
+# this repo is public on GitHub -- it must never reach git history. The
+# live Vercel site still gets the real file: see .vercelignore, which
+# deploys stats.json straight from this laptop without going through git.
 stats.json
 chat.db
 chat.db-wal
@@ -7,8 +11,22 @@ chat.db-shm
 *.db-wal
 *.db-shm
 
-# Python
+# Python (legacy-flask-backend/)
 __pycache__/
 *.py[cod]
+*.pyc
+*.pyo
+*.pyd
 .venv/
 venv/
+.env/
+
+# Node / Next.js
+node_modules/
+.next/
+.vercel/
+
+# Secrets -- Gemini API key and the /api/analyze secret live here, and this
+# file must never be committed.
+.env.local
+.env*.local

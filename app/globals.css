@@ -1,0 +1,9 @@
+/* This one line pulls in all of Tailwind's utility classes (things like
+   className="text-3xl font-bold"). It has to be the first thing in this
+   file. */
+@import "tailwindcss";
+
+body {
+  background-color: #0f1115;
+  color: #e9eaee;
+}
