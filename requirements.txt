@@ -1,0 +1,19 @@
+# Python dependencies for scripts/read_imessage_db.py.
+#
+# To install: create a virtual environment (a private, project-only folder
+# of Python packages, so this doesn't affect Python anywhere else on your
+# Mac), then install into it:
+#
+#   python3 -m venv --copies .venv
+#   .venv/bin/pip install -r requirements.txt
+#
+# --copies matters: without it, macOS creates .venv/bin/python as a symlink
+# out to Homebrew's Cellar, and Next's build-time bundler (Turbopack)
+# crashes on `npm run build` because it refuses to follow a symlink that
+# escapes the project directory. --copies makes .venv/bin/python a real,
+# self-contained file instead.
+
+# Decodes the attributedBody column in chat.db (Apple's binary "typedstream"
+# format), which is where message text often lives when the plain text
+# column is empty.
+pytypedstream

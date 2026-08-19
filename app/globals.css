@@ -3,7 +3,209 @@
    file. */
 @import "tailwindcss";
 
+/* Design tokens for the dashboard. Centralized here so every component
+   references the same handful of colors instead of hardcoding hex values
+   all over app/page.js and app/LeaderboardRow.js. */
+:root {
+  --bg: #050505;
+
+  --glass: rgba(255, 255, 255, 0.035);
+  --glass-strong: rgba(255, 255, 255, 0.06);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-border-strong: rgba(255, 255, 255, 0.16);
+
+  --border: rgba(255, 255, 255, 0.08);
+  --border-gold: rgba(255, 204, 77, 0.3);
+
+  --ink: #f4f4f7;
+  --ink-secondary: #98979f;
+  --ink-muted: #5a5a63;
+
+  --accent: #8d7bff;
+  --accent-soft: rgba(141, 123, 255, 0.16);
+  --emerald: #3fe4b5;
+  --gold: #ffcc4d;
+  --gold-soft: rgba(255, 204, 77, 0.13);
+
+  --ease-fluid: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
 body {
-  background-color: #0f1115;
-  color: #e9eaee;
+  background-color: var(--bg);
+  color: var(--ink);
+  position: relative;
+}
+
+@keyframes mesh-drift {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(0, 1.5%, 0) scale(1.04);
+  }
+}
+
+/* Everything below is scoped to Tailwind's "components" cascade layer, one
+   step below its "utilities" layer -- so any Tailwind utility class placed
+   alongside these in a className (absolute, mb-10, flex-1, ...) always wins
+   the cascade, exactly like Tailwind's own component-authoring guidance.
+   Without this, an unlayered rule here (e.g. .tapback-badge's own
+   `position: relative`) would silently beat `absolute` regardless of
+   class order -- unlayered CSS always outranks anything in a @layer. */
+@layer components {
+  /* Ethereal Glass backdrop: two soft, fixed radial glows (amber + violet)
+     sitting behind everything. Fixed + transform-only drift keeps this off
+     the scroll/layout thread entirely -- see the performance guardrails in
+     the design skill this file follows. */
+  .mesh-glow {
+    position: fixed;
+    inset: -10%;
+    z-index: -2;
+    pointer-events: none;
+    background:
+      radial-gradient(38rem 30rem at 12% -8%, rgba(255, 204, 77, 0.1), transparent 60%),
+      radial-gradient(34rem 28rem at 88% 12%, rgba(141, 123, 255, 0.12), transparent 60%),
+      radial-gradient(30rem 26rem at 50% 105%, rgba(63, 228, 181, 0.06), transparent 65%);
+    animation: mesh-drift 26s var(--ease-fluid) infinite alternate;
+    will-change: transform;
+  }
+
+  /* A whisper of film grain over the whole viewport so the deep black reads
+     as a physical surface instead of a flat digital fill. Fixed + very low
+     opacity, never attached to a scrolling container. */
+  .grain-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    pointer-events: none;
+    opacity: 0.035;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* next/font/google writes its generated font variables onto <html> (see
+     app/layout.js) as --font-display, --font-body and --font-mono. These
+     classes are the only place that reads them, so the rest of the app
+     just writes className="font-display" etc. instead of repeating
+     font-family stacks everywhere. */
+  .font-display {
+    font-family: var(--font-display), sans-serif;
+  }
+  .font-mono {
+    font-family: var(--font-mono), monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Eyebrow tag: the microscopic pill that precedes a big heading. */
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    border-radius: 999px;
+    padding: 0.35rem 0.85rem;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    border: 1px solid var(--glass-border);
+    background: var(--glass);
+    backdrop-filter: blur(20px);
+    color: var(--gold);
+  }
+
+  /* Double-bezel ("machined hardware") architecture: an outer shell that
+     reads like an aluminum tray, and an inner core with its own highlight
+     and a mathematically-nested radius. Used for the winner card and every
+     leaderboard row. */
+  .glass-shell {
+    border-radius: 2rem;
+    padding: 0.375rem;
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.65);
+  }
+
+  .glass-core {
+    border-radius: calc(2rem - 0.375rem);
+    background: var(--glass-strong);
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(28px);
+  }
+
+  .glass-shell--gold {
+    background: linear-gradient(160deg, var(--gold-soft), transparent 60%);
+    border-color: var(--border-gold);
+  }
+
+  .glass-shell--gold .glass-core {
+    background: linear-gradient(165deg, rgba(255, 204, 77, 0.07), var(--glass-strong) 65%);
+  }
+
+  /* Stat tiles inside the winner bento -- their own miniature double-bezel,
+     one radius step down from the card that contains them. */
+  .stat-tile {
+    border-radius: 1.1rem;
+    border: 1px solid var(--glass-border);
+    background: rgba(0, 0, 0, 0.18);
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.06);
+    padding: 0.9rem 1.1rem;
+  }
+
+  /* The winner card's laugh-count badge, shaped like an iMessage tapback
+     bubble (a rounded pill with a little tail) since a tapback count is
+     literally what it's displaying. The badge itself is positioned via the
+     "absolute top-5 right-5" utilities in its className, not here -- see
+     the layer note above. The tail is a rotated square peeking out from
+     behind the pill, the classic CSS speech-bubble trick. */
+  .tapback-badge {
+    backdrop-filter: blur(16px);
+  }
+  .tapback-badge::before {
+    content: "";
+    position: absolute;
+    bottom: -5px;
+    left: 22px;
+    width: 14px;
+    height: 14px;
+    background: inherit;
+    border-radius: 3px;
+    transform: rotate(45deg);
+    z-index: -1;
+  }
+
+  /* Scroll-entry reveal: a heavy fade-up-and-unblur, driven by
+     IntersectionObserver in app/RevealOnScroll.js. GPU-safe -- only
+     transform, opacity and filter ever animate. */
+  .reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    filter: blur(6px);
+    transition:
+      opacity 0.9s var(--ease-fluid),
+      transform 0.9s var(--ease-fluid),
+      filter 0.9s var(--ease-fluid);
+  }
+  .reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+
+  /* Score meter fill: a soft gradient sweep instead of a flat accent block. */
+  .meter-fill {
+    background: linear-gradient(90deg, var(--accent), var(--gold));
+    box-shadow: 0 0 12px 0 rgba(141, 123, 255, 0.45);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mesh-glow {
+    animation: none;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    transition: none;
+  }
 }

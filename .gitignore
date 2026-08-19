@@ -4,6 +4,13 @@
 # live Vercel site still gets the real file: see .vercelignore, which
 # deploys stats.json straight from this laptop without going through git.
 stats.json
+
+# Same reasoning as stats.json above: this file maps real phone
+# numbers/emails to your friends' real names. Copy lib/contactNames.example.js
+# to lib/contactNames.js and fill in your own -- see that file for how.
+# Like stats.json, this is NOT in .vercelignore, so the live site still
+# shows real names; it's only kept out of git.
+lib/contactNames.js
 chat.db
 chat.db-wal
 chat.db-shm
@@ -30,3 +37,4 @@ node_modules/
 # file must never be committed.
 .env.local
 .env*.local
+.gstack/

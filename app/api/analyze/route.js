@@ -1,30 +1,39 @@
-// This is the API route that actually runs the analysis:
+// The API route that actually runs the analysis:
 //   POST /api/analyze   with a JSON body of { chatId, secret }
 //
-// IMPORTANT -- this route only works when YOU run it locally on your own
-// Mac (via `npm run dev`), never on the live Vercel site. Here's why: this
-// route reads ~/Library/Messages/chat.db, which is a file on your laptop.
-// Vercel's servers are not your laptop -- they have no access to that
-// file, no matter what. So even after this project is deployed, hitting
-// this route on the live URL will always fail at the "read chat.db" step.
-// That's not a bug to fix, it's exactly what keeps this safe: your friends
-// browsing the live site can only ever see the static public/stats.json
-// file that already exists. There is nothing for them to trigger.
+// IMPORTANT -- only works when run locally (`npm run dev`), never on the
+// live Vercel site. It reads ~/Library/Messages/chat.db, a file on your
+// laptop that Vercel's servers have no access to, so hitting this route
+// on the live URL always fails at the "read chat.db" step. That's the
+// real protection: friends browsing the live site only ever see the
+// static public/stats.json that's already there -- there's nothing for
+// them to trigger.
 //
-// The `secret` check below is a second layer of protection for when you
-// run this locally (in case your dev server is ever reachable by someone
-// else on the same network) -- but the real protection is that your
-// Gemini API key and your chat.db only exist on your own computer, and we
-// never add that key to Vercel's settings.
+// The `secret` check below is a second layer, for when this runs locally
+// and the dev server happens to be reachable by someone else on the
+// network -- but the real protection is that the Gemini API key and
+// chat.db only exist on this machine, and that key never goes into
+// Vercel's settings.
+//
+// The pipeline this route runs, step by step:
+//   1. lib/runChatReader.js reads the raw messages out of chat.db
+//      (via a Python helper script -- see that file for why).
+//   2. lib/scoreMessages.js turns those raw messages into a
+//      deterministic score for each person. No AI involved.
+//   3. lib/analyzeWithGemini.js asks Gemini to pick each person's
+//      funniest message and write a short comment about them.
+//   4. The combined result gets saved to public/stats.json, which the
+//      dashboard (app/page.js) reads and displays.
 
 import fs from "fs";
 import path from "path";
-import { analyzeMessages } from "../../../lib/analyzeWithGemini";
-import { listGroupChats } from "../../../lib/readImessageDb";
+import { listGroupChats, readChat } from "../../../lib/runChatReader";
+import { scoreChatMessages } from "../../../lib/scoreMessages";
+import { synthesizeWithGemini } from "../../../lib/analyzeWithGemini";
 
-// Forces this route to run in a normal Node.js environment (not Next.js's
-// lightweight "Edge" environment). We need this because better-sqlite3,
-// used deep inside analyzeMessages(), needs regular Node.js to work.
+// Forces this route onto the normal Node.js runtime, not Next.js's
+// lightweight Edge runtime -- starting the Python script below needs
+// Node's child_process module, which Edge doesn't have.
 export const runtime = "nodejs";
 
 // GET /api/analyze?secret=YOUR_SECRET
@@ -45,15 +54,15 @@ export async function GET(request) {
 }
 
 // POST /api/analyze   body: { "chatId": 123, "secret": "YOUR_SECRET" }
-// Runs the real analysis and overwrites public/stats.json with the result.
+// Runs the full pipeline described above and overwrites public/stats.json
+// with the result.
 export async function POST(request) {
   const body = await request.json();
   const { chatId, secret } = body;
 
-  // Reject the request unless the secret matches the one only you know,
-  // stored in .env.local as ANALYZE_SECRET. This stops anyone else who
-  // finds this route from running an analysis (and spending your Gemini
-  // credit) even while your dev server is running.
+  // Reject unless the secret matches ANALYZE_SECRET in .env.local --
+  // stops anyone else who finds this route from running an analysis (and
+  // burning Gemini credit) while the dev server is up.
   if (!process.env.ANALYZE_SECRET || secret !== process.env.ANALYZE_SECRET) {
     return Response.json({ error: "Invalid or missing secret." }, { status: 401 });
   }
@@ -64,7 +73,9 @@ export async function POST(request) {
 
   let result;
   try {
-    result = await analyzeMessages(chatId);
+    const rawChat = readChat(chatId); // Step 1: read chat.db
+    const scoredChat = scoreChatMessages(rawChat.messages); // Step 2: deterministic scoring
+    result = await synthesizeWithGemini(rawChat.chatName, scoredChat); // Step 3: Gemini picks highlights + writes comments
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
