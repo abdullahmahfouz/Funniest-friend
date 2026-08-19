@@ -96,23 +96,6 @@ body {
     font-variant-numeric: tabular-nums;
   }
 
-  /* Eyebrow tag: the microscopic pill that precedes a big heading. */
-  .eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    border-radius: 999px;
-    padding: 0.35rem 0.85rem;
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    border: 1px solid var(--glass-border);
-    background: var(--glass);
-    backdrop-filter: blur(20px);
-    color: var(--gold);
-  }
-
   /* Double-bezel ("machined hardware") architecture: an outer shell that
      reads like an aluminum tray, and an inner core with its own highlight
      and a mathematically-nested radius. Used for the winner card and every

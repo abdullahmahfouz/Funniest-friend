@@ -4,7 +4,7 @@
 // Gemini never touches that score -- it only picks each person's
 // topMessage (their funniest line) and writes the reason.
 
-import { Crown, Sparkles } from "lucide-react";
+import { Crown } from "lucide-react";
 import stats from "../public/stats.json";
 import { formatScore } from "./formatScore";
 import LeaderboardRow from "./LeaderboardRow";
@@ -45,10 +45,6 @@ export default function HomePage() {
         )}
 
         <header className="mb-14">
-          <span className="eyebrow mb-5">
-            <Sparkles size={12} strokeWidth={1.5} />
-            Group chat superlative
-          </span>
           <h1 className="font-display max-w-xl text-4xl leading-[1.05] font-extrabold sm:text-6xl">
             Who&rsquo;s the funniest in the group chat?
           </h1>
