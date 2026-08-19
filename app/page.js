@@ -29,9 +29,19 @@ export default function HomePage() {
   // reliable way to tell sample data from your actual group chat.
   const isSampleData = !stats.generatedAt;
 
+  const introRoster = stats.people.map(({ name, pokemonImageUrl }) => ({
+    name,
+    pokemonImageUrl,
+  }));
+
   return (
     <>
-      <LoadingScreen roster={stats.people} />
+      {/* Only the two fields the intro animation actually draws. Passing
+          whole person objects to a Client Component would serialize every
+          field -- topMessage and reason included -- into the RSC payload
+          embedded in the HTML, putting the quoted messages back on the
+          page in View Source even though nothing renders them. */}
+      <LoadingScreen roster={introRoster} />
       <main className="relative mx-auto max-w-2xl px-4 py-16 sm:px-6 sm:py-24">
         {isSampleData && (
           <div className="glass-shell mb-10">
