@@ -4,33 +4,27 @@
 // site: without it, anyone who finds the URL (not just your friends)
 // could see everyone's real names and messages.
 //
-// Uses HTTP Basic Auth, which is built into every web browser, so
-// there's no login page to build. When the browser gets a response with
-// a "WWW-Authenticate" header (sent below), it automatically pops up its
-// own built-in username/password box. Whatever someone types comes back
-// on the next request inside an "Authorization" header, which this file
-// checks.
+// Anyone without a valid session cookie gets sent to /login, which is a
+// normal page with a normal form (see app/login/page.js). Submitting it
+// hits app/api/login/route.js, which checks the password and sets the
+// cookie this file looks for. See lib/sitePassword.js for why it's a form
+// and a cookie rather than the browser's built-in Basic Auth box.
 
-// Shown in the browser's password prompt. It doesn't need to be secret --
-// the actual password (SITE_PASSWORD) is the only thing that matters, and
-// that lives in .env.local, never in this file.
-const SITE_USERNAME = "friend";
+import { NextResponse } from "next/server";
+import { COOKIE_NAME, sessionToken } from "./lib/sitePassword";
 
-function requestHasCorrectPassword(request) {
-  const authHeader = request.headers.get("authorization");
-  if (!authHeader || !authHeader.startsWith("Basic ")) {
-    return false;
-  }
+// Paths the gate deliberately doesn't cover:
+//
+// /login and /api/login are how someone gets past the gate, so gating
+// them would leave no way in -- a locked door with the key inside.
+//
+// /api/analyze isn't a page anyone browses to; it's the pipeline you
+// trigger from your own terminal, and it already has its own password in
+// ANALYZE_SECRET. Leaving it out means the documented curl commands in
+// the README work as written, without also having to carry a cookie.
+const UNGATED_PATHS = ["/login", "/api/login", "/api/analyze"];
 
-  // The browser sends "Basic <base64 of username:password>"; atob()
-  // decodes that back into a normal string.
-  const base64Credentials = authHeader.replace("Basic ", "");
-  const [username, password] = atob(base64Credentials).split(":");
-
-  return username === SITE_USERNAME && password === process.env.SITE_PASSWORD;
-}
-
-export function proxy(request) {
+export async function proxy(request) {
   if (!process.env.SITE_PASSWORD) {
     // No password set up yet -- let requests through instead of silently
     // locking everyone out. See .env.local for how to set SITE_PASSWORD,
@@ -39,16 +33,23 @@ export function proxy(request) {
     return;
   }
 
-  if (requestHasCorrectPassword(request)) {
+  const { pathname } = request.nextUrl;
+
+  if (UNGATED_PATHS.includes(pathname)) {
     return; // returning nothing here lets the request continue as normal
   }
 
-  // Sending exactly this response and header is what makes the browser
-  // pop up its built-in username/password box.
-  return new Response("Password required.", {
-    status: 401,
-    headers: { "WWW-Authenticate": 'Basic realm="Funniest Friend"' },
-  });
+  const session = request.cookies.get(COOKIE_NAME);
+  if (session && session.value === (await sessionToken())) {
+    return;
+  }
+
+  // Remember where they were headed so the login form can send them back
+  // there afterwards, instead of always dumping everyone on the homepage.
+  const loginUrl = new URL("/login", request.url);
+  loginUrl.searchParams.set("next", pathname + request.nextUrl.search);
+
+  return NextResponse.redirect(loginUrl);
 }
 
 // Runs the password check on every page and route EXCEPT Next.js's own

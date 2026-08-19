@@ -75,7 +75,7 @@ Set these in `.env.local` (never committed — see `.gitignore`):
 | --- | --- |
 | `GEMINI_API_KEY` | Calls to Gemini for picking top messages and writing reasons |
 | `ANALYZE_SECRET` | A password you make up, required to hit `/api/analyze` so nobody else can trigger it or spend your Gemini credit |
-| `SITE_PASSWORD` | HTTP Basic Auth password protecting the whole deployed site, since it shows real names and messages ([proxy.js](proxy.js)) |
+| `SITE_PASSWORD` | The password protecting the whole deployed site, since it shows real names and messages. Visitors enter it once on `/login` ([proxy.js](proxy.js)) |
 
 `lib/contactNames.js` (copied from `lib/contactNames.example.js`) maps raw iMessage sender identifiers (phone numbers, emails, `"Me"`) to a friendly display name and a Pokémon avatar from `lib/pokemonAvatars.js`. Anyone not listed still shows up, just with their raw phone number/email and no avatar.
 
@@ -85,7 +85,7 @@ Real message data never touches git:
 
 - `public/stats.json` (the analysis output) and `lib/contactNames.js` (real names) are both gitignored.
 - `public/stats.json` **is** deployed to Vercel directly from your laptop via `vercel deploy` (see `.vercelignore`), since that's the one file the live dashboard needs — it just never goes through git.
-- The live site is protected by HTTP Basic Auth (`SITE_PASSWORD`) so only people you share the password with can view it.
+- The live site is behind a password (`SITE_PASSWORD`) so only people you share it with can view it. Anyone without a valid session cookie gets sent to `/login`, and the cookie lasts 30 days. It's a normal form rather than the browser's built-in Basic Auth prompt because in-app browsers -- a link tapped inside Messages or Instagram -- often never show that prompt, leaving friends stuck on a blank page.
 - `/api/analyze` reads a file that only exists on your machine, so running it against the deployed URL always fails — the deployed app can only ever serve the static snapshot you generated locally.
 
 ## Development
