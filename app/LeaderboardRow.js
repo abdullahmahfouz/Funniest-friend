@@ -34,17 +34,6 @@ export default function LeaderboardRow({ person, rank, maxLaughs }) {
                 </span>
               </div>
 
-              {person.topMessage && (
-                <p className="mt-1 text-sm italic" style={{ color: "var(--ink)" }}>
-                  &ldquo;{person.topMessage}&rdquo;
-                </p>
-              )}
-              {person.reason && (
-                <p className="mt-1 text-sm" style={{ color: "var(--ink-secondary)" }}>
-                  {person.reason}
-                </p>
-              )}
-
               {/* The score meter. Track is a fixed 100%-wide bar in a faint
                   glass tint; the fill is a violet-to-gold gradient sweep,
                   sized relative to the winner's score. */}

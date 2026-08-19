@@ -1,8 +1,10 @@
 // Dashboard page. Reads public/stats.json (written by POST /api/analyze)
 // and ranks everyone by laughs, the combined score lib/scoreMessages.js
 // computes from tapbacks, threaded replies, and reaction-y typed replies.
-// Gemini never touches that score -- it only picks each person's
-// topMessage (their funniest line) and writes the reason.
+//
+// The leaderboard is scores only -- no quoted messages. stats.json still
+// carries Gemini's topMessage and reason per person (see
+// lib/analyzeWithGemini.js); this page just doesn't display them.
 
 import { Crown } from "lucide-react";
 import stats from "../public/stats.json";
@@ -14,8 +16,8 @@ import LoadingScreen from "./LoadingScreen";
 import RevealOnScroll from "./RevealOnScroll";
 
 export default function HomePage() {
-  // laughs is the deterministic score from lib/scoreMessages.js -- Gemini
-  // has no say in the ranking, only in topMessage and reason.
+  // laughs is the deterministic score from lib/scoreMessages.js. Gemini
+  // has no say in the ranking at all.
   const rankedPeople = [...stats.people].sort((a, b) => b.laughs - a.laughs);
   const [winner, ...rest] = rankedPeople;
   // Bars are sized relative to the winner's score, since laughs has no
@@ -80,17 +82,6 @@ export default function HomePage() {
                         <h2 className="font-display max-w-full truncate text-3xl font-bold sm:text-4xl">{winner.name}</h2>
                       </div>
                     </div>
-
-                    {winner.topMessage && (
-                      <p className="mt-4 text-base italic" style={{ color: "var(--ink)" }}>
-                        &ldquo;{winner.topMessage}&rdquo;
-                      </p>
-                    )}
-                    {winner.reason && (
-                      <p className="mt-2 text-sm" style={{ color: "var(--ink-secondary)" }}>
-                        {winner.reason}
-                      </p>
-                    )}
 
                     <div className="mt-5">
                       <ReactionChips reactions={winner.reactions} size="lg" />
