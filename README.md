@@ -1,6 +1,6 @@
 # Funniest Friend
 
-Who's actually the funniest person in your group chat? Not by vibes — by counting every ❤️😂👍 tapback, threaded reply, and reaction-y "💀" text your friends have actually sent, straight from your Mac's iMessage history.
+Who's actually the funniest person in your group chat? Not by vibes  by counting every ❤️😂👍 tapback, threaded reply, and reaction-y "💀" text your friends have actually sent, straight from your Mac's iMessage history.
 
 Funniest Friend reads your local `chat.db`, deterministically scores every sender on a laugh score, then asks Gemini to pick each person's single funniest message and write a one-line roast to go with it. The result is a leaderboard dashboard you can share with the group.
 
